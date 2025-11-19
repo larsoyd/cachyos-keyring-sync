@@ -16,7 +16,6 @@ if ! pacman-key -l >/dev/null 2>&1; then
     echo "cachyos-keyring-sync: pacman keyring is not initialised."
     echo "Initialize it first, for example:"
     echo "  sudo pacman-key --init"
-    echo "  sudo pacman-key --populate archlinux"
     exit 1
 fi
 
