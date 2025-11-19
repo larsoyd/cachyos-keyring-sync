@@ -1,2 +1,2 @@
 # cachyos-keyring-sync
-Sync the CachyOS Keyring on Arch Linux without the package from the [cachyos] repository which also replaces pacman which is not ideal.
+Simple script that checks upstream key for changes compared to local key and then updates if needed. Can be manually run.
