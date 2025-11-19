@@ -7,30 +7,39 @@ LOCAL_DIR="/usr/share/pacman/keyrings"
 TMPDIR="$(mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT
 
-# 1) Fetch latest cachyos-trusted from upstream
+if ! command -v pacman-key >/dev/null 2>&1; then
+    echo "cachyos-keyring-sync: pacman-key not found in PATH" >&2
+    exit 1
+fi
+
+if ! pacman-key -l >/dev/null 2>&1; then
+    echo "cachyos-keyring-sync: pacman keyring is not initialised."
+    echo "Initialize it first, for example:"
+    echo "  sudo pacman-key --init"
+    echo "  sudo pacman-key --populate archlinux"
+    exit 1
+fi
+
+install -d -m 0755 "$LOCAL_DIR"
+
 curl -fsSL "$REMOTE_BASE/cachyos-trusted" > "$TMPDIR/cachyos-trusted.new"
 
-# 2) If we do not have a local file yet, or if it changed, update both files
-if ! cmp -s "$TMPDIR/cachyos-trusted.new" "$LOCAL_DIR/cachyos-trusted" 2>/dev/null; then
-    echo "cachyos-keyring-sync: detected change in cachyos-trusted, updating keyring"
+LOCAL_TRUSTED="$LOCAL_DIR/cachyos-trusted"
 
-    # Fetch matching cachyos.gpg from upstream
+if [ ! -f "$LOCAL_TRUSTED" ] || ! cmp -s "$TMPDIR/cachyos-trusted.new" "$LOCAL_TRUSTED"; then
+    echo "cachyos-keyring-sync: updating CachyOS keyring files"
+
     curl -fsSL "$REMOTE_BASE/cachyos.gpg" > "$TMPDIR/cachyos.gpg.new"
 
-    # Basic sanity: gpg file should not be empty
     if [ ! -s "$TMPDIR/cachyos.gpg.new" ]; then
         echo "cachyos-keyring-sync: downloaded cachyos.gpg is empty, aborting" >&2
         exit 1
     fi
 
-    # 3) Install new keyring files
     install -m 0644 "$TMPDIR/cachyos.gpg.new" "$LOCAL_DIR/cachyos.gpg"
-    install -m 0644 "$TMPDIR/cachyos-trusted.new" "$LOCAL_DIR/cachyos-trusted"
+    install -m 0644 "$TMPDIR/cachyos-trusted.new" "$LOCAL_TRUSTED"
 
-    # 4) Re-populate pacman keyring from updated keyring files
     pacman-key --populate cachyos
 else
-    # Optional: stay quiet if nothing changed
-    # echo "cachyos-keyring-sync: no changes"
     :
 fi
