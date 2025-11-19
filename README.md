@@ -4,9 +4,9 @@ Simple script that checks upstream key for changes compared to local key and the
 
 Install:
 ```bash
-chmod +x setup.sh
+$ chmod +x setup.sh
 
-./setup.sh
+$ ./setup.sh
 ```
 
 Uninstall:
